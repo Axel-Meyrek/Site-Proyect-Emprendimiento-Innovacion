@@ -1,0 +1,423 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Plataforma de Arte Digital (Simulación)</title>
+    <!-- Carga de Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- Configuración para usar la fuente Inter y el color de énfasis -->
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@100..900&display=swap');
+        body {
+            font-family: 'Inter', sans-serif;
+            background-color: #f7f7f7; /* Fondo ligeramente gris para contraste */
+        }
+        .accent-bg {
+            background-color: #FF6348; /* Color Tomato para énfasis */
+        }
+        .accent-text {
+            color: #FF6348;
+        }
+        /* Estilo para simular el botón de subir archivo */
+        #upload-button {
+            transition: all 0.3s ease;
+        }
+        #upload-button:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 6px -1px rgba(255, 99, 72, 0.4), 0 2px 4px -2px rgba(255, 99, 72, 0.4);
+        }
+    </style>
+</head>
+<body class="min-h-screen antialiased">
+
+    <!-- Navegación y Cabecera Principal -->
+    <header class="bg-white shadow-md sticky top-0 z-10">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4 flex justify-between items-center">
+            <h1 class="text-2xl font-bold accent-text">Arte Digital</h1>
+            <nav class="flex space-x-4">
+                <button id="nav-buyer" onclick="setPage('buyer')" class="px-4 py-2 rounded-lg text-gray-700 hover:accent-text transition duration-200">
+                    Comprador (Galería)
+                </button>
+                <button id="nav-artist" onclick="setPage('artist')" class="px-4 py-2 rounded-lg text-gray-700 hover:accent-text transition duration-200">
+                    Artista (Dashboard)
+                </button>
+                <button id="cart-button" onclick="toggleCart()" class="relative p-2 rounded-full hover:bg-gray-100 transition duration-200">
+                    <!-- Icono de Carrito (Lucide icon, simulado con SVG) -->
+                    <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="w-6 h-6 text-gray-700">
+                        <circle cx="8" cy="21" r="1"></circle><circle cx="19" cy="21" r="1"></circle><path d="M2.05 2.05h2l2.66 12.42a2 2 0 0 0 2 1.62h9.72a2 2 0 0 0 2-1.62L23 6H6"></path>
+                    </svg>
+                    <span id="cart-count" class="absolute top-0 right-0 inline-flex items-center justify-center px-2 py-1 text-xs font-bold leading-none text-white transform translate-x-1/2 -translate-y-1/2 bg-red-500 rounded-full">0</span>
+                </button>
+            </nav>
+        </div>
+    </header>
+
+    <main class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-10">
+        <!-- Contenedor del Dashboard del Artista -->
+        <div id="artist-dashboard" class="hidden">
+            <h2 class="text-3xl font-semibold text-gray-800 mb-6 border-b pb-2">Panel del Artista</h2>
+
+            <!-- Dashboard Sencillo (Estadísticas) -->
+            <div class="grid grid-cols-1 md:grid-cols-3 gap-6 mb-10">
+                <div class="bg-white p-6 rounded-xl shadow-lg border border-gray-100">
+                    <p class="text-sm font-medium text-gray-500">Ventas Totales</p>
+                    <p class="text-4xl font-extrabold mt-1 text-gray-900" id="stat-sales">14</p>
+                </div>
+                <div class="bg-white p-6 rounded-xl shadow-lg border border-gray-100">
+                    <p class="text-sm font-medium text-gray-500">Ingresos (USD)</p>
+                    <p class="text-4xl font-extrabold mt-1 text-gray-900" id="stat-earnings">$7,520</p>
+                </div>
+                <div class="bg-white p-6 rounded-xl shadow-lg border border-gray-100">
+                    <p class="text-sm font-medium text-gray-500">Obras Activas</p>
+                    <p class="text-4xl font-extrabold mt-1 text-gray-900" id="stat-active">6</p>
+                </div>
+            </div>
+
+            <!-- Formulario de Subida de Obra -->
+            <div class="bg-white p-8 rounded-xl shadow-lg border border-gray-100">
+                <h3 class="text-2xl font-semibold text-gray-800 mb-6">Subir Nueva Obra Digital</h3>
+
+                <div class="grid grid-cols-1 lg:grid-cols-3 gap-8">
+                    <!-- Columna de Subida y Previsualización -->
+                    <div class="lg:col-span-1">
+                        <label for="file-upload" class="block text-sm font-medium text-gray-700 mb-4">Arte (Preview)</label>
+                        <div id="preview-box" class="w-full h-48 bg-gray-100 rounded-lg flex items-center justify-center border-2 border-dashed border-gray-300 overflow-hidden mb-4">
+                            <span id="preview-text" class="text-gray-400">Sin imagen cargada</span>
+                            <img id="image-preview" src="" alt="Vista previa de la obra" class="hidden w-full h-full object-cover">
+                        </div>
+                        <button id="upload-button" onclick="simulateFileUpload()" class="w-full h-12 accent-bg text-white font-bold rounded-lg shadow-md hover:shadow-xl transition duration-300 ease-in-out transform hover:scale-[1.01]">
+                            Subir Arte
+                        </button>
+                    </div>
+
+                    <!-- Columna de Campos -->
+                    <div class="lg:col-span-2 space-y-4">
+                        <div>
+                            <label for="title" class="block text-sm font-medium text-gray-700">Título de la Obra</label>
+                            <input type="text" id="title" class="mt-1 block w-full border border-gray-300 rounded-lg shadow-sm p-3 focus:ring-[#FF6348] focus:border-[#FF6348] transition duration-150" placeholder="Ej: Eclipse de Medianoche">
+                        </div>
+                        <div>
+                            <label for="price" class="block text-sm font-medium text-gray-700">Precio (USD)</label>
+                            <input type="number" id="price" class="mt-1 block w-full border border-gray-300 rounded-lg shadow-sm p-3 focus:ring-[#FF6348] focus:border-[#FF6348] transition duration-150" placeholder="100.00">
+                        </div>
+                        <div>
+                            <label for="description" class="block text-sm font-medium text-gray-700">Descripción Corta</label>
+                            <textarea id="description" rows="3" class="mt-1 block w-full border border-gray-300 rounded-lg shadow-sm p-3 focus:ring-[#FF6348] focus:border-[#FF6348] transition duration-150" placeholder="Máximo 150 caracteres"></textarea>
+                        </div>
+                        <div>
+                            <label for="status" class="block text-sm font-medium text-gray-700">Estatus de Publicación</label>
+                            <div class="mt-2 flex items-center space-x-4">
+                                <span class="px-3 py-1 text-sm font-medium rounded-full bg-green-100 text-green-700">
+                                    Publicado
+                                </span>
+                                <span class="px-3 py-1 text-sm font-medium rounded-full bg-yellow-100 text-yellow-700">
+                                    En Revisión
+                                </span>
+                            </div>
+                        </div>
+                        <button onclick="submitArtwork()" class="mt-4 w-full md:w-auto px-6 py-3 accent-bg text-white font-semibold rounded-lg shadow-md hover:opacity-90 transition duration-150">
+                            Guardar y Publicar
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Contenedor del Marketplace del Comprador -->
+        <div id="buyer-marketplace" class="hidden">
+            <h2 class="text-3xl font-semibold text-gray-800 mb-6 border-b pb-2">Galería de Arte Digital</h2>
+
+            <!-- Barra de Filtros -->
+            <div class="bg-white p-4 rounded-xl shadow-sm mb-8 flex flex-col sm:flex-row gap-4 sm:gap-6">
+                <select class="p-2 border border-gray-300 rounded-lg focus:ring-[#FF6348] focus:border-[#FF6348] text-sm">
+                    <option>Categorías</option>
+                    <option>Abstracto</option>
+                    <option>Conceptual</option>
+                    <option>Retratos</option>
+                </select>
+                <select class="p-2 border border-gray-300 rounded-lg focus:ring-[#FF6348] focus:border-[#FF6348] text-sm">
+                    <option>Precio</option>
+                    <option>$0 - $100</option>
+                    <option>$101 - $500</option>
+                    <option>+$500</option>
+                </select>
+                <select class="p-2 border border-gray-300 rounded-lg focus:ring-[#FF6348] focus:border-[#FF6348] text-sm">
+                    <option>Popularidad</option>
+                    <option>Más recientes</option>
+                    <option>Más vendidos</option>
+                    <option>Mejor valorados</option>
+                </select>
+            </div>
+
+            <!-- Catálogo de Arte (Galería 3 Columnas) -->
+            <div id="art-gallery" class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-8">
+                <!-- Las tarjetas de arte se insertarán aquí mediante JavaScript -->
+            </div>
+        </div>
+
+        <!-- Carrito de Compras (Modal / Sidebar Simulado) -->
+        <div id="shopping-cart" class="fixed top-0 right-0 h-full w-full md:w-96 bg-white shadow-2xl transform translate-x-full transition-transform duration-300 z-20 p-6 overflow-y-auto">
+            <div class="flex justify-between items-center mb-6 border-b pb-3">
+                <h3 class="text-2xl font-bold text-gray-800">Mi Carrito</h3>
+                <button onclick="toggleCart()" class="text-gray-500 hover:text-gray-800">
+                    <!-- Icono de Cierre (X) -->
+                    <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="w-6 h-6"><path d="M18 6L6 18M6 6l12 12"></path></svg>
+                </button>
+            </div>
+            <div id="cart-items" class="space-y-4 mb-6">
+                <!-- Los items del carrito se insertarán aquí -->
+                <p id="empty-cart-message" class="text-gray-500 italic">El carrito está vacío.</p>
+            </div>
+            <div id="cart-summary" class="border-t pt-4">
+                <div class="flex justify-between items-center text-xl font-bold mb-4">
+                    <span>Total:</span>
+                    <span id="cart-total" class="accent-text">$0.00</span>
+                </div>
+                <button onclick="simulateCheckout()" class="w-full h-12 accent-bg text-white font-bold rounded-lg shadow-md hover:opacity-90 transition duration-150">
+                    Pagar Ahora
+                </button>
+            </div>
+        </div>
+    </main>
+
+    <!-- Script de Simulación y Lógica -->
+    <script>
+        // --- Variables de Estado Globales ---
+        let currentPage = 'buyer'; // Empieza en la vista de Comprador
+        let isCartOpen = false;
+
+        // Mock data para simular las obras de arte
+        const mockArtworks = [
+            { id: 1, title: "Sueño Cósmico", artist: "Aurora Pixel", price: 350.00, status: "Publicado", imageUrl: "https://th.bing.com/th/id/R.854ccb104d61f69ed54e74f39d5fa9ec?rik=udPJ7TTAysFkwg&riu=http%3a%2f%2f3.bp.blogspot.com%2f-fPc2ta0S5eI%2fUfflcx6tRGI%2fAAAAAAABQNg%2fAz00hEmglf8%2fs1600%2fpinturas-de-paisajes-mexicanos%2b(7).jpg&ehk=Sqb3zRVgsEJi1NJJ%2fPPPMoiB1HLdKZMd27GyzJXQzVw%3d&risl=&pid=ImgRaw&r=0" },
+            { id: 2, title: "Retrato Glitch", artist: "Neo Vector", price: 120.50, status: "Publicado", imageUrl: "https://th.bing.com/th/id/R.51054712a234407fda103775ffa42202?rik=78lTp1xMOmzyhg&riu=http%3a%2f%2f2.bp.blogspot.com%2f-IsArb2yYMo4%2fUrw2OIPniFI%2fAAAAAAAAxsE%2fE_o5hJ8yJRY%2fs1600%2fcuadros-paisajes-naturales-pinturas.jpg&ehk=r0a18%2fD%2buPtvDdtjltVBFGn3EwXlhTpRxSzntcln%2bOk%3d&risl=&pid=ImgRaw&r=0" },
+            { id: 3, title: "Ciudad 2077", artist: "Cyber Brush", price: 780.00, status: "Publicado", imageUrl: "https://images.joseartgallery.com/127459/digital-art-style.jpg" },
+            { id: 4, title: "Abstracción Fuego", artist: "Ignis Lux", price: 215.00, status: "Publicado", imageUrl: "https://t4.ftcdn.net/jpg/06/89/68/95/360_F_689689548_4OakJSm38nByCNwJVSkBVIRnLeqgFaMC.jpg" },
+            { id: 5, title: "Onda de Color", artist: "Vera Croma", price: 45.00, status: "Publicado", imageUrl: "https://www.academiataure.com/wp-content/uploads/2023/12/artes-digitales-hero-desktop.png" },
+            { id: 6, title: "Geometría Pura", artist: "Klara Form", price: 990.00, status: "Publicado", imageUrl: "https://definicion.de/wp-content/uploads/2015/12/arte-digital.jpg" },
+        ];
+        let cart = [];
+
+        // --- Funciones de Utilidad y Renderizado ---
+
+        /**
+         * Cambia la página visible entre 'artist' y 'buyer'.
+         * @param {string} page - La página a mostrar ('artist' o 'buyer').
+         */
+        function setPage(page) {
+            currentPage = page;
+            const buyerEl = document.getElementById('buyer-marketplace');
+            const artistEl = document.getElementById('artist-dashboard');
+
+            if (page === 'buyer') {
+                buyerEl.classList.remove('hidden');
+                artistEl.classList.add('hidden');
+                renderGallery(); // Asegura que la galería se renderice al cambiar a Comprador
+            } else {
+                artistEl.classList.remove('hidden');
+                buyerEl.classList.add('hidden');
+            }
+        }
+
+        /**
+         * Renderiza la galería de arte para el comprador.
+         */
+        function renderGallery() {
+            const galleryEl = document.getElementById('art-gallery');
+            galleryEl.innerHTML = ''; // Limpiar galería
+
+            mockArtworks.forEach(art => {
+                const card = `
+                    <div class="bg-white rounded-xl shadow-lg overflow-hidden transition-all duration-300 hover:shadow-xl hover:scale-[1.02] border border-gray-100">
+                        <!-- Imagen de la obra -->
+                        <img src="${art.imageUrl}" alt="${art.title}" class="w-full h-48 object-cover object-center">
+                        <div class="p-4">
+                            <h4 class="text-lg font-semibold text-gray-800 truncate" title="${art.title}">${art.title}</h4>
+                            <p class="text-sm text-gray-500 mb-2">Por: ${art.artist}</p>
+                            <div class="flex justify-between items-center mt-3">
+                                <span class="text-xl font-bold accent-text">$${art.price.toFixed(2)}</span>
+                                <button onclick="addToCart(${art.id})" class="px-4 py-2 text-sm accent-bg text-white font-medium rounded-lg hover:opacity-90 transition duration-150 transform active:scale-95">
+                                    Comprar
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                `;
+                galleryEl.insertAdjacentHTML('beforeend', card);
+            });
+        }
+
+        /**
+         * Abre o cierra el carrito de compras.
+         */
+        function toggleCart() {
+            isCartOpen = !isCartOpen;
+            const cartEl = document.getElementById('shopping-cart');
+            if (isCartOpen) {
+                cartEl.classList.remove('translate-x-full');
+                renderCart();
+            } else {
+                cartEl.classList.add('translate-x-full');
+            }
+        }
+
+        /**
+         * Agrega una obra al carrito de compras (simulación).
+         * @param {number} artId - ID de la obra a agregar.
+         */
+        function addToCart(artId) {
+            const art = mockArtworks.find(a => a.id === artId);
+            if (art) {
+                cart.push(art);
+                updateCartCount();
+                // Opcional: Abrir el carrito automáticamente
+                // toggleCart();
+                console.log(`"${art.title}" agregado al carrito.`);
+                alertMessage(`"${art.title}" agregado al carrito.`);
+            }
+        }
+
+        /**
+         * Elimina una obra del carrito por su índice (simulación).
+         * @param {number} index - Índice del item en el array 'cart'.
+         */
+        function removeFromCart(index) {
+            const removedItem = cart.splice(index, 1)[0];
+            updateCartCount();
+            renderCart();
+            alertMessage(`"${removedItem.title}" eliminado del carrito.`, 'bg-red-500');
+        }
+
+        /**
+         * Renderiza los items dentro del carrito y calcula el total.
+         */
+        function renderCart() {
+            const itemsEl = document.getElementById('cart-items');
+            const totalEl = document.getElementById('cart-total');
+            itemsEl.innerHTML = '';
+            let total = 0;
+
+            if (cart.length === 0) {
+                itemsEl.innerHTML = '<p id="empty-cart-message" class="text-gray-500 italic">El carrito está vacío.</p>';
+            } else {
+                cart.forEach((art, index) => {
+                    total += art.price;
+                    const item = `
+                        <div class="flex items-center space-x-4 p-3 bg-gray-50 rounded-lg border border-gray-200">
+                            <!-- Imagen de Previa (Placeholder simple) -->
+                            <div class="w-16 h-12 bg-gray-200 rounded-md overflow-hidden flex-shrink-0">
+                                <img src="${art.imageUrl}" alt="${art.title}" class="w-full h-full object-cover">
+                            </div>
+                            <div class="flex-grow">
+                                <p class="font-medium text-sm text-gray-800 truncate">${art.title}</p>
+                                <p class="text-sm font-semibold accent-text">$${art.price.toFixed(2)}</p>
+                            </div>
+                            <button onclick="removeFromCart(${index})" class="text-gray-400 hover:text-red-500 transition duration-150 flex-shrink-0">
+                                <!-- Icono de Borrar (Trash) -->
+                                <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 6h18M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path></svg>
+                            </button>
+                        </div>
+                    `;
+                    itemsEl.insertAdjacentHTML('beforeend', item);
+                });
+            }
+            totalEl.textContent = `$${total.toFixed(2)}`;
+        }
+
+        /**
+         * Actualiza el contador del carrito en la navegación.
+         */
+        function updateCartCount() {
+            document.getElementById('cart-count').textContent = cart.length;
+        }
+
+        /**
+         * Simula la subida de un archivo y actualiza la vista previa.
+         */
+        function simulateFileUpload() {
+            const mockImageUrl = "https://placehold.co/400x300/FF6348/FFFFFF?text=Tu%20Arte%0ACargado";
+            const previewTextEl = document.getElementById('preview-text');
+            const imagePreviewEl = document.getElementById('image-preview');
+
+            previewTextEl.classList.add('hidden');
+            imagePreviewEl.src = mockImageUrl;
+            imagePreviewEl.classList.remove('hidden');
+
+            alertMessage('Imagen simulada cargada con éxito.', 'bg-green-500');
+        }
+
+        /**
+         * Simula el envío del formulario de obra.
+         */
+        function submitArtwork() {
+            const title = document.getElementById('title').value;
+            const price = document.getElementById('price').value;
+            const description = document.getElementById('description').value;
+
+            if (!title || !price || !description) {
+                alertMessage('Por favor, completa todos los campos requeridos.', 'bg-yellow-500');
+                return;
+            }
+
+            // Simulación de envío de datos
+            console.log("Obra enviada:");
+            console.log({ title, price, description });
+
+            // Simulación de éxito y limpieza de campos
+            document.getElementById('title').value = '';
+            document.getElementById('price').value = '';
+            document.getElementById('description').value = '';
+            document.getElementById('image-preview').classList.add('hidden');
+            document.getElementById('image-preview').src = '';
+            document.getElementById('preview-text').classList.remove('hidden');
+
+            alertMessage('Obra enviada exitosamente. Estatus: En Revisión.', 'bg-green-500');
+        }
+
+        /**
+         * Simula el proceso de pago.
+         */
+        function simulateCheckout() {
+            if (cart.length === 0) {
+                alertMessage('El carrito está vacío. Agrega obras antes de pagar.', 'bg-yellow-500');
+                return;
+            }
+
+            const total = cart.reduce((sum, art) => sum + art.price, 0).toFixed(2);
+            alertMessage(`Pago simulado de $${total} procesado con éxito. ¡Gracias por tu compra!`, 'accent-bg');
+            cart = []; // Vaciar carrito
+            updateCartCount();
+            toggleCart(); // Cerrar carrito
+        }
+
+        /**
+         * Muestra un mensaje temporal flotante (sustituto de alert()).
+         * @param {string} message - El mensaje a mostrar.
+         * @param {string} bgColor - Clase de color de fondo de Tailwind.
+         */
+        function alertMessage(message, bgColor = 'accent-bg') {
+            let alertEl = document.getElementById('custom-alert');
+            if (!alertEl) {
+                alertEl = document.createElement('div');
+                alertEl.id = 'custom-alert';
+                document.body.appendChild(alertEl);
+            }
+
+            alertEl.className = `${bgColor} text-white px-4 py-3 rounded-lg shadow-xl fixed bottom-6 left-1/2 transform -translate-x-1/2 opacity-0 transition-opacity duration-300 z-50`;
+            alertEl.textContent = message;
+
+            // Mostrar
+            setTimeout(() => alertEl.classList.remove('opacity-0'), 10);
+            // Ocultar después de 3 segundos
+            setTimeout(() => alertEl.classList.add('opacity-0'), 3000);
+        }
+
+        // --- Inicialización ---
+        window.onload = () => {
+            setPage(currentPage);
+            updateCartCount();
+        };
+
+    </script>
+</body>
+</html>
